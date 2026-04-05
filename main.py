@@ -20,7 +20,7 @@ while True:
         action = parsed["action"]
         inputs = parsed["action_input"]
 
-        result = run_action(action, inputs)
+        result = run_action(action,inputs)
 
     except Exception as e:
         result = "Error understanding response"
