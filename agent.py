@@ -1,46 +1,37 @@
-import os
-import json
-from openai import OpenAI
-from dotenv import load_dotenv
-
-load_dotenv()
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-tools={}
-
-def register_tools(tool_dict):
-    global tools
-    tools=tool_dict
-
+import subprocess
 
 def ask_llm(user_input):
     prompt = f"""
 You are an AI agent.
 
-You must respond ONLY in JSON:
+You MUST respond ONLY in JSON format.
+DO NOT talk.
+DO NOT explain.
+
+Format:
 {{
-  "action": "tool_name",
-  "action_input": {{ }}
+  "action": "add | multiply | get_date",
+  "action_input": {{
+    "a": number,
+    "b": number
+  }}
 }}
 
-Available tools:
-- add(a, b)
-- multiply(a, b)
-- get_date()
+Rules:
+- If user asks for addition → use "add"
+- If multiplication → use "multiply"
+- If date → use "get_date" and empty input {{}}
+- Extract numbers from user input
+- Return ONLY JSON (no text before/after)
 
 User query: {user_input}
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+    result = subprocess.run(
+        ["ollama", "run", "phi3"],
+        input=prompt,
+        text=True,
+        capture_output=True
     )
 
-    return response.choices[0].message.content
-
-
-def run_action(action, inputs):
-    if action in tools:
-        return tools[action](**inputs)
-    return "Invalid action"
+    return result.stdout.strip()

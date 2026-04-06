@@ -1,28 +1,20 @@
 import json
+import re
+from agent import  ask_llm
 from tools import add, multiply, get_date
-from agent import register_tools, run_action, ask_llm
 
-tools = {
-    "add": add,
-    "multiply": multiply,
-    "get_date": get_date
-}
+llm_output = ask_llm(user)
 
-register_tools(tools)
+try:
+    json_str = re.search(r'\{.*\}', llm_output, re.DOTALL).group()
+    parsed = json.loads(json_str)
 
-while True:
-    user = input("You: ")
+    action = parsed["action"]
+    inputs = parsed["action_input"]
 
-    llm_output = ask_llm(user)
+    result = run_action(action, inputs)
 
-    try:
-        parsed = json.loads(llm_output)
-        action = parsed["action"]
-        inputs = parsed["action_input"]
+except Exception as e:
+    result = f"Error parsing LLM output: {llm_output}"
 
-        result = run_action(action,inputs)
-
-    except Exception as e:
-        result = "Error understanding response"
-
-    print("Agent:", result)
+print("Agent:", result)
